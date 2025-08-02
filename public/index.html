@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美股走勢與新聞</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>今日美股走勢與新聞亮點</h1>
+            <p>數據來源：S&P 500 (SPY)</p>
+            <button id="update-btn">點我更新</button>
+        </header>
+
+        <main>
+            <div id="loading" class="hidden">正在加載數據中...</div>
+            
+            <section class="chart-container">
+                <h2>近期走勢 (近30日收盤價)</h2>
+                <div id="chart" style="width: 100%; height: 400px;"></div>
+            </section>
+
+            <section class="news-container">
+                <h2>新聞亮點</h2>
+                <ul id="news-list">
+                    <!-- 新聞內容將由 JavaScript 動態生成 -->
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.3/dist/echarts.min.js"></script>
+    <!-- 引入我們自己的 JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
