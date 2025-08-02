@@ -1,5 +1,8 @@
 // api/index.js
-require('dotenv').config();
+// 判斷是否在本地開發環境，只有在本地才載入 dotenv
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const express = require('express');
 const axios = require('axios');
 const app = express();
