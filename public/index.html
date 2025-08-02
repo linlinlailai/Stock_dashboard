@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant"> <!-- 建議將語言設為繁體中文 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>美股走勢與新聞</title>
+    <title>美股走勢與新聞儀表板</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>今日美股走勢與新聞亮點</h1>
-            <p>數據來源：S&P 500 (SPY)</p>
-            <button id="update-btn">點我更新</button>
+            <h1>美股走勢與新聞儀表板</h1>
+            
+            <!-- 【第1步：新增查詢區塊】 -->
+            <!-- 這個區塊取代了舊的 "點我更新" 按鈕 -->
+            <div class="search-box">
+                <input type="text" id="symbol-input" placeholder="輸入美股代碼 (例如 AAPL, TSLA)">
+                <button id="search-btn">查詢</button>
+            </div>
+            
+            <!-- 【第2步：新增一個 span 來動態顯示目前的股票代碼】 -->
+            <p>目前顯示：<span id="current-symbol">...</span></p>
         </header>
 
         <main>
-            <div id="loading" class="hidden">正在加載數據中...</div>
+            <!-- 【第3步：將 loading 指示器移到 main 的頂部，讓它更通用】 -->
+            <div id="loading">正在加載數據中...</div>
             
+            <!-- 圖表容器現在不需要預設的 h2 標題了，因為標題會由 ECharts 動態產生 -->
             <section class="chart-container">
-                <h2>近期走勢 (近30日收盤價)</h2>
                 <div id="chart" style="width: 100%; height: 400px;"></div>
             </section>
 
             <section class="news-container">
-                <h2>新聞亮點</h2>
+                <h2>相關新聞亮點</h2>
                 <ul id="news-list">
                     <!-- 新聞內容將由 JavaScript 動態生成 -->
                 </ul>

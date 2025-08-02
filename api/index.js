@@ -1,8 +1,10 @@
 // api/index.js
+
 // 判斷是否在本地開發環境，只有在本地才載入 dotenv
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -13,29 +15,32 @@ app.use(cors());
 
 const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
-// API 路由：獲取股票和新聞數據
+// API 路由：現在可以接收動態的股票代碼
 app.get('/api/data', async (req, res) => {
+    // 從前端的查詢參數中獲取 symbol，如果沒有提供，則預設為 'SPY'
+    const symbol = req.query.symbol || 'SPY';
+
     if (!API_KEY) {
         return res.status(500).json({ error: 'API key is not configured.' });
     }
 
     try {
-        // 1. 獲取 S&P 500 (SPY) 的每日股價數據
+        // 1. 根據傳入的 symbol 獲取每日股價數據
         const stockPromise = axios.get(`https://www.alphavantage.co/query`, {
             params: {
                 function: 'TIME_SERIES_DAILY',
-                symbol: 'SPY', // SPY 是追蹤 S&P 500 的 ETF ，很具代表性
-                outputsize: 'compact', // 最近 100 天的數據
+                symbol: symbol, // 使用從前端傳來的 symbol
+                outputsize: 'compact',
                 apikey: API_KEY
             }
-        });
+        } );
 
-        // 2. 獲取市場新聞
+        // 2. 根據傳入的 symbol 獲取市場新聞
         const newsPromise = axios.get(`https://www.alphavantage.co/query`, {
             params: {
                 function: 'NEWS_SENTIMENT',
-                tickers: 'SPY', // 可以指定相關標的
-                limit: '5', // 獲取最新的 5 條新聞
+                tickers: symbol, // 使用從前端傳來的 symbol
+                limit: '5',
                 apikey: API_KEY
             }
         } );
@@ -43,16 +48,18 @@ app.get('/api/data', async (req, res) => {
         // 平行發送兩個請求，加快速度
         const [stockResponse, newsResponse] = await Promise.all([stockPromise, newsPromise]);
 
-        // 檢查 API 回應是否成功
-        if (stockResponse.data['Error Message'] || newsResponse.data['Error Message']) {
-             return res.status(500).json({ error: 'Failed to fetch data from Alpha Vantage API. Check your API key or usage limit.' });
+        // 增強的錯誤檢查：檢查股票 API 是否回傳了錯誤或提示
+        // Alpha Vantage 找到無效代碼時，回傳的不是 Error Message 而是 Note
+        if (stockResponse.data['Note'] || stockResponse.data['Error Message']) {
+             return res.status(400).json({ error: `無法獲取 '${symbol}' 的股票數據。請檢查股票代碼是否正確，或您的 API 使用頻率可能已達上限。` });
         }
 
         // 3. 整理數據並回傳
         const timeSeries = stockResponse.data['Time Series (Daily)'];
-        const dates = Object.keys(timeSeries).slice(0, 30).reverse(); // 取最近30天並反轉，讓圖表從左到右是時間遞增
+        const dates = Object.keys(timeSeries).slice(0, 30).reverse();
         const prices = dates.map(date => timeSeries[date]['4. close']);
 
+        // 如果 newsResponse.data.feed 不存在，給一個空陣列，避免錯誤
         const newsFeed = newsResponse.data.feed || [];
         const highlights = newsFeed.map(item => ({
             title: item.title,
@@ -61,16 +68,22 @@ app.get('/api/data', async (req, res) => {
             source: item.source
         }));
 
+        // ***【關鍵修改】*** 將回傳的資料結構化，並附上查詢的 symbol
         res.status(200).json({
+            symbol: symbol, // 把當前查詢的 symbol 回傳給前端
             chartData: {
                 dates: dates,
                 prices: prices
             },
-            newsData: highlights
+            newsData: { // 將 newsData 包裝成物件
+                items: highlights,
+                count: highlights.length // 附上新聞數量
+            }
         });
 
     } catch (error) {
-        res.status(500).json({ error: 'An error occurred while fetching data.', details: error.message });
+        // 捕捉處理過程中的其他未知錯誤
+        res.status(500).json({ error: '伺服器在處理請求時發生錯誤。', details: error.message });
     }
 });
 
