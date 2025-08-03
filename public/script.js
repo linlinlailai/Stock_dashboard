@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         newsList.innerHTML = '';
-        chartContainer.innerHTML = '';
 
         try {
             const response = await fetch(`/api/data?symbol=${symbol}`);
